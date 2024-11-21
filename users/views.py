@@ -1,0 +1,45 @@
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from .forms import RegistrationForm, LoginForm
+
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
+def register(request):
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.set_password(form.cleaned_data['password'])
+            user.save()
+            login(request,user)
+            return redirect('home')
+        else :
+            form.add_error('username', 'Invalid input')
+    else:
+        form = RegistrationForm()
+    return render(request, 'users/pages/signin.html', {'form': form})
+
+def login_view(request):
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                next_url = request.GET.get('next')
+                if next_url:
+                    return redirect(next_url)
+                return redirect('home') 
+            else :
+                form.add_error(None , 'username/password is wrong')
+    else:
+        form = LoginForm()
+    return render(request, 'users/pages/login.html', {'form': form})
+@login_required
+def logout_view(request):
+    logout(request)
+    return redirect('login')
