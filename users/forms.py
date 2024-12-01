@@ -1,22 +1,17 @@
-
 from django import forms
-from .models import CustomUser
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
-class RegistrationForm(forms.ModelForm):
-    password = forms.CharField(label='Password', widget=forms.PasswordInput)
-    password2 = forms.CharField(label='Repeat password', widget=forms.PasswordInput)
+User = get_user_model() 
+
+class SignUpForm(UserCreationForm):
+    email = forms.EmailField(max_length=200, help_text='Required')
 
     class Meta:
-        model = CustomUser  
-        fields = ('username', 'email', 'password')
-
-    def clean_password2(self):
-        password = self.cleaned_data.get('password')
-        password2 = self.cleaned_data.get('password2')
-        if password != password2:
-            raise forms.ValidationError('Passwords do not match.')
-        return password2
+        model = User
+        fields = ('username', 'email', 'password1', 'password2')
 
 class LoginForm(forms.Form):
-    username = forms.CharField()
-    password = forms.CharField(widget=forms.PasswordInput)
+    username = forms.CharField(max_length=200)
+    password = forms.CharField(max_length=200, widget=forms.PasswordInput)

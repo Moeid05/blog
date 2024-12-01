@@ -3,7 +3,20 @@ from django.db import models
 from .managers import CustomUserManager
 
 
-class CustomUser(AbstractUser):
+class CustomUser (AbstractUser ):
+    total_vote = models.IntegerField(default=0)
+    followers = models.ManyToManyField(
+        'self', 
+        symmetrical=False,
+        related_name='following',
+    )
+
+    # voted_postes = models.ManyToManyField(blog)
+    # posted_bloges = models.ManyToManyField(blog)
+
+    def __str__(self):
+        return self.username
+    
     groups = models.ManyToManyField(
         Group,
         related_name="user_groups",

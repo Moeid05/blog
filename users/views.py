@@ -1,24 +1,24 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from .forms import RegistrationForm, LoginForm
+from .forms import SignUpForm, LoginForm
 
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
 def register(request):
     if request.method == 'POST':
-        form = RegistrationForm(request.POST)
+        form = SignUpForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
             user.set_password(form.cleaned_data['password'])
             user.save()
-            login(request,user)
-            return redirect('home')
+            login(request, user)
+            return redirect('profile', request.user.username ) 
         else :
             form.add_error('username', 'Invalid input')
     else:
-        form = RegistrationForm()
+        form = SignUpForm()
     return render(request, 'users/pages/signin.html', {'form': form})
 
 def login_view(request):
@@ -33,7 +33,7 @@ def login_view(request):
                 next_url = request.GET.get('next')
                 if next_url:
                     return redirect(next_url)
-                return redirect('home') 
+                return redirect('profile',request.user.username) 
             else :
                 form.add_error(None , 'username/password is wrong')
     else:
@@ -43,3 +43,8 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+def profile(request, username=None):
+    user = get_object_or_404(User, username=username)
+    context = {'user': user}
+    return render(request, "users/pages/profile.html", context=context)
