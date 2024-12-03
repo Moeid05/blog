@@ -13,7 +13,7 @@ urlpatterns = [
     path('blog/<int:id>/<str:name>/voteup/' , views.blog , name='voteup'),
     path('blog/<int:id>/<str:name>/votedown/' , views.blog , name='votedown'),
 #author view
-    path('blog/add/' , views.add_blog , name='add_blogs'),
-    path('blog/edit/' , views.edit_blog , name='edit_blogs'),
+    path('blog/add/id/' , views.add_blog , name='add_blogs'),
+    path('blog/edit/id/' , views.edit_blog , name='edit_blogs'),
     path('blog/delete/<int:blog_id>/' , views.delete_blog , name='delete_blogs'),
 ]
