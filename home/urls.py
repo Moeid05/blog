@@ -10,10 +10,8 @@ urlpatterns = [
     path('blog/top/' , views.top_blogs , name='top_blogs'),
     path('blog/hot/' , views.hot_blogs , name='hot_blogs'),
     path('blog/<int:id>/<str:name>/' , views.blog , name='blog'),
-    path('blog/<int:id>/<str:name>/voteup/' , views.voteup , name='voteup'),
-    path('blog/<int:id>/<str:name>/votedown/' , views.votedown , name='votedown'),
 #author view
-    path('blog/add/id/' , views.add_blog , name='add_blogs'),
-    path('blog/edit/id/' , views.edit_blog , name='edit_blogs'),
+    path('blog/add/' , views.add_blog , name='add_blogs'),
+    path('blog/edit/<int:blog_id>/' , views.edit_blog , name='edit_blogs'),
     path('blog/delete/<int:blog_id>/' , views.delete_blog , name='delete_blogs'),
 ]
