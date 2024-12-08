@@ -3,7 +3,7 @@ from .models import Blog
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import F, ExpressionWrapper, FloatField
-from django.http import JsonResponse
+from django.http import JsonResponse,HttpResponseNotAllowed
 from django.core.paginator import Paginator
 import json
 from django.contrib.auth.decorators import login_required
@@ -30,45 +30,51 @@ def get_paginated_blogs(queryset, page_number):
     return [{'id': blog.id, 'title': blog.title, 'content': blog.content} for blog in blogs]
 
 def new_blogs(request):
-    try:
-        data = json.loads(request.body.decode('utf-8'))
-        page_number = int(data.get('page', 1))
-    except (json.JSONDecodeError, TypeError):
-        page_number = 1
-    new_blogs = Blog.objects.all()
-    blog_data = get_paginated_blogs(new_blogs, page_number)
-    return JsonResponse(blog_data, safe=False)
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            page_number = int(data.get('page', 1))
+        except (json.JSONDecodeError, TypeError):
+            page_number = 1
+        new_blogs = Blog.objects.all()
+        blog_data = get_paginated_blogs(new_blogs, page_number)
+        return JsonResponse(blog_data, safe=False)
+    return HttpResponseNotAllowed(['POST'])
 
 def top_blogs(request):
-    try:
-        data = json.loads(request.body.decode('utf-8'))
-        page_number = int(data.get('page', 1))
-    except (json.JSONDecodeError, TypeError):
-        page_number = 1
-    top_blogs = Blog.objects.order_by('-vote')
-    blog_data = get_paginated_blogs(top_blogs, page_number)
-    return JsonResponse(blog_data, safe=False)
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            page_number = int(data.get('page', 1))
+        except (json.JSONDecodeError, TypeError):
+            page_number = 1
+        top_blogs = Blog.objects.order_by('-vote')
+        blog_data = get_paginated_blogs(top_blogs, page_number)
+        return JsonResponse(blog_data, safe=False)
+    return HttpResponseNotAllowed(['POST'])
 
 def hot_blogs(request):
-    try:
-        data = json.loads(request.body.decode('utf-8'))
-        page_number = int(data.get('page', 1))
-    except (json.JSONDecodeError, TypeError):
-        page_number = 1
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            page_number = int(data.get('page', 1))
+        except (json.JSONDecodeError, TypeError):
+            page_number = 1
 
-    time_frame = timezone.now() - timedelta(days=7)
-    hot_blogs = Blog.objects.filter(publish_date__gte=time_frame).annotate(
-        score=ExpressionWrapper(
-            F('vote') * 2 +
-            F('views') * 1 +
-            F('comment_count') * 3 +
-            (timezone.now() - F('publish_date')).total_seconds() / 3600 * -1,
-            output_field=FloatField()
-        )
-    ).order_by('-score')
+        time_frame = timezone.now() - timedelta(days=7)
+        hot_blogs = Blog.objects.filter(publish_date__gte=time_frame).annotate(
+            score=ExpressionWrapper(
+                F('vote') * 2 +
+                F('views') * 1 +
+                F('comment_count') * 3 +
+                (timezone.now() - F('publish_date')).total_seconds() / 3600 * -1,
+                output_field=FloatField()
+            )
+        ).order_by('-score')
 
-    blog_data = get_paginated_blogs(hot_blogs, page_number)
-    return JsonResponse(blog_data, safe=False)
+        blog_data = get_paginated_blogs(hot_blogs, page_number)
+        return JsonResponse(blog_data, safe=False)
+    return HttpResponseNotAllowed(['POST'])
 
 class BlogView(LoginRequiredMixin, View):
     def get(self, request, id, name):
