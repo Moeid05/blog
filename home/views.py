@@ -1,8 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.http import JsonResponse,HttpResponseNotAllowed
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
+from .forms import BlogForm
 from django.utils import timezone
 from datetime import timedelta
 from django.core.paginator import Paginator
@@ -113,22 +115,21 @@ class BlogView(LoginRequiredMixin, View):
         return JsonResponse({'success': False, 'error': 'Invalid action.'}, status=400)
 
 class AddBlog(LoginRequiredMixin, View) :
-    def get(self,request) :
-        return render (request , "home/pages/create_blog.html")
-    def post(self,request) :
-        try :
-            data = json.loads(request.body)
-            blog = Blog.objects.create(
-                title = data.get('title'),
-                content = data.get('content'),
-                author = request.user,
-            )
-            return redirect('blog', id=blog.id, name=blog.title.replace(" ", "-").lower())
-        except KeyError as e:
-            return JsonResponse({'success': False, 'error': f'Missing field: {str(e)}'}, status=400)
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=500)
-        
+    def get(self, request):
+        form = BlogForm()
+        return render(request, "home/pages/create_blog.html", {'form': form})
+    def post(self, request):
+            form = BlogForm(request.POST)
+            if form.is_valid():
+                blog = form.save(commit=False)
+                blog.author = request.user
+                blog.save()
+                redirect_url = reverse('blog', args=[blog.id, blog.title])
+                print(redirect_url)
+                return JsonResponse({'success': True, 'redirect_to': redirect_url})
+            else:
+                return JsonResponse({'success': False, 'error': form.errors}, status=400)
+
 class UpdateBlog(LoginRequiredMixin, View) :
     def get(self, request, blog_id):
         blog = get_object_or_404(Blog, pk=blog_id)
@@ -150,7 +151,6 @@ class UpdateBlog(LoginRequiredMixin, View) :
         except KeyError as e:
             return JsonResponse({'success': False, 'error': f'Missing field: {str(e)}'}, status=400)
         except Exception as e:
-            print(e)
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @login_required
