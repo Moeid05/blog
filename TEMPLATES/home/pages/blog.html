@@ -1,0 +1,21 @@
+{%extends 'home/layouts/base.html' %}
+{%block content%}
+<main>
+    <article>
+        <h2>Content</h2>
+        <p>{{ blog.content }}</p>
+        <p><strong>Published on:</strong> {{ blog.publish_date }}</p>
+        <p><strong>Author:</strong> {{ blog.author.username }}</p>
+    </article>
+
+    <section>
+        <h2>Vote on this Blog</h2>
+        <form id="vote-form" method="post" action="{% url 'blog' id=blog.id name=blog.title|slugify %}">
+            {% csrf_token %}
+            <button type="submit" name="action" value="voteup">Upvote</button>
+            <button type="submit" name="action" value="votedown">Downvote</button>
+        </form>
+        <p><strong>Votes:</strong> {{ blog.voteUps.count }} Upvotes, {{ blog.voteDowns.count }} Downvotes</p>
+    </section>
+</main>
+{%endblock content%}

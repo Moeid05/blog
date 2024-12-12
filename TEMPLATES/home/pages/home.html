@@ -1,0 +1,18 @@
+{%extends 'home/layouts/base.html' %}
+{%block content%}
+<header>
+    <h1>Welcome to the Blog Platform</h1>
+</header>
+
+<main>
+    <section>
+        {% if user.is_authenticated %}
+            <h2>Hello, {{ user.username }}!</h2>
+            <p>Welcome back to your blog platform. Feel free to explore the latest blogs or create your own.</p>
+        {% else %}
+            <h2>Welcome, Guest!</h2>
+            <p>Please log in to access more features.</p>
+        {% endif %}
+    </section>
+</main>
+{%endblock content%}

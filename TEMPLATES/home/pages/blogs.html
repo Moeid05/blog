@@ -1,0 +1,64 @@
+{%extends 'home/layouts/base.html' %}
+{%block content%}
+<main>
+    <section>
+        <h2>All Blogs</h2>
+        <div id="blog-list">
+            {% for blog in blogs %}
+                <div class="blog-post">
+                    <h3><a href="{% url 'blog' id=blog.id name=blog.title|slugify %}">{{ blog.title }}</a></h3>
+                    <p>{{ blog.content|truncatewords:30 }}</p>
+                    <p><strong>Published on:</strong> {{ blog.publish_date }}</p>
+                </div>
+            {% empty %}
+                <p>No blogs available at the moment.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section>
+        <h2>Hot Blogs</h2>
+        <div id="hot-blogs">
+            {% for blog in hot_blogs %}
+                <div class="blog-post">
+                    <h3><a href="{% url 'blog' id=blog.id name=blog.title|slugify %}">{{ blog.title }}</a></h3>
+                    <p>{{ blog.content|truncatewords:30 }}</p>
+                    <p><strong>Published on:</strong> {{ blog.publish_date }}</p>
+                </div>
+            {% empty %}
+                <p>No hot blogs available at the moment.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section>
+        <h2>Top Blogs</h2>
+        <div id="top-blogs">
+            {% for blog in top_blogs %}
+                <div class="blog-post">
+                    <h3><a href="{% url 'blog' id=blog.id name=blog.title|slugify %}">{{ blog.title }}</a></h3>
+                    <p>{{ blog.content|truncatewords:30 }}</p>
+                    <p><strong>Published on:</strong> {{ blog.publish_date }}</p>
+                </div>
+            {% empty %}
+                <p>No top blogs available at the moment.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section>
+        <h2>New Blogs</h2>
+        <div id="new-blogs">
+            {% for blog in new_blogs %}
+                <div class="blog-post">
+                    <h3><a href="{% url 'blog' id=blog.id name=blog.title|slugify %}">{{ blog.title }}</a></h3>
+                    <p>{{ blog.content|truncatewords:30 }}</p>
+                    <p><strong>Published on:</strong> {{ blog.publish_date }}</p>
+                </div>
+            {% empty %}
+                <p>No new blogs available at the moment.</p>
+            {% endfor %}
+        </div>
+    </section>
+</main>
+{%endblock content%}

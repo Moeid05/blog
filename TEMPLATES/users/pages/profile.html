@@ -1,0 +1,73 @@
+{% extends 'home/layouts/base.html' %}
+{% block content %}
+<div class="container">
+    <h2>{{ user.username }}'s Profile</h2>
+    <p><strong>Username:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Date Joined:</strong> {{ user.date_joined }}</p>
+    
+    <h3>Published Blogs</h3>
+    <ul>
+        {% for blog in published_blogs %}
+            <li><a href="{% url 'blog' id=blog.id name=blog.title|slugify %}">{{ blog.title }}</a></li>
+        {% empty %}
+            <li>No published blogs.</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Voted Up Blogs</h3>
+    <ul>
+        {% for blog in voted_up_blogs %}
+            <li><a href="{% url 'blog' id=blog.id name=blog.title|slugify %}">{{ blog.title }}</a></li>
+        {% empty %}
+            <li>No voted up blogs.</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Viewed Blogs</h3>
+    <ul>
+        {% for blog in viewed_blogs %}
+            <li><a href="{% url 'blog' id=blog.id name=blog.title|slugify %}">{{ blog.title }}</a></li>
+        {% empty %}
+            <li>No viewed blogs.</li>
+        {% endfor %}
+    </ul>
+
+
+    <div id="create-blog-message"></div>
+
+    <h3>Actions</h3>
+    <ul>
+        <li><a href="{% url 'add_blog' %}">Create a New Blog</a></li>
+        <li><a href="{% url 'logout' %}">Logout</a></li>
+    </ul>
+</div>
+
+<script>
+    document.getElementById('create-blog-form').onsubmit = async function(event) {
+        event.preventDefault();
+        const title = document.getElementById('title').value;
+        const content = document.getElementById('content').value;
+
+        const response = await fetch('/blogs/add/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ title, content }),
+        });
+
+        const responseBody = await response.json(); // Parse the JSON response
+
+        if (response.ok) {
+            // If the response indicates success, redirect to the new blog URL
+            window.location.href = responseBody.redirect_url;
+        } else {
+            // Handle error response
+            console.error('Error:', responseBody);
+            document.getElementById('create-blog-message').innerText = 'Error creating blog: ' + (responseBody.error || 'Unknown error');
+        }
+    };
+</script>
+{% endblock content %}

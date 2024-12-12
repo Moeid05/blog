@@ -1,0 +1,85 @@
+{% extends 'home/layouts/base.html' %}
+{% block extrastyle %}
+<style>
+body {
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+label {
+    display: block;
+    margin-bottom: 10px;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+}
+
+button[type="submit"] {
+    background-color: #4CAF50;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button[type="submit"]:hover {
+    background-color: #3e8e41;
+}
+
+#error-message {
+    color: #f00;
+    font-size: 16px;
+    margin-top: 20px;
+}
+</style>
+{% endblock extrastyle %}
+{% block content %}
+<div class="container">
+    <form id="blog-form" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Create Blog</button>
+        <div id="error-message"></div>
+    </form>
+</div>
+{% endblock content %}
+{% block extrajs %}
+<script>
+const form = document.getElementById('blog-form');
+const errorMessage = document.getElementById('error-message');
+form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+    fetch('/blog/add/', {
+        method: 'POST',
+        body: formData,
+    })
+    .then((response) => response.json())
+    .then((data) => {
+        if (!data.success) {
+            errorMessage.textContent = data.error;
+        } else {
+            console.log('Form submitted successfully!');
+            window.location.href = data.redirect_to;
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+});
+</script>
+{% endblock extrajs %}
