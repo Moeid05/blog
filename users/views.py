@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .forms import SignUpForm, LoginForm
+from home.models import Blog
 
 from django.contrib.auth import get_user_model
 User = get_user_model()
@@ -44,7 +45,21 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
+@login_required
 def profile(request, username=None):
-    user = get_object_or_404(User, username=username)
-    context = {'user': user}
-    return render(request, "users/pages/profile.html", context=context)
+    user = get_object_or_404(User, username=username if username else request.user.username)
+
+    published_blogs = Blog.objects.filter(author=user)
+
+    voted_up_blogs = Blog.objects.filter(voteUps=user)
+
+    viewed_blogs = Blog.objects.filter(view=user)
+
+    context = {
+        'user': user,
+        'published_blogs': published_blogs,
+        'voted_up_blogs': voted_up_blogs,
+        'viewed_blogs': viewed_blogs,
+    }
+
+    return render(request, "users/pages/profile.html", context)
