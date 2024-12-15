@@ -90,28 +90,24 @@ class BlogView(LoginRequiredMixin, View):
         blog = get_object_or_404(Blog, pk=id)
 
         if action == 'voteup':
-            if request.user not in blog.voteUps.all():
-                try :
-                    blog.voteUps.add(request.user)
-                    blog.voteDowns.remove(request.user)
-                except :
-                    blog.voteUps.add(request.user)
-                blog.save()
-                return JsonResponse({'success': True, 'votes': blog.vote})
-            else:
-                return JsonResponse({'success': False, 'error': 'You have already voted up.'}, status=400)
-
-        elif action == 'votedown':
             if request.user in blog.voteDowns.all():
-                return JsonResponse({'success': False, 'error': 'You already voted down.'}, status=400)
-            else:
-                try :
-                    blog.voteDowns.add(request.user)
-                    blog.voteUps.remove(request.user)
-                except :
-                    blog.voteDowns.add(request.user)
-                blog.save()
-                return JsonResponse({'success': True, 'votes': blog.vote})
+                blog.voteDowns.remove(request.user)
+                blog.voteUps.add(request.user)
+            elif request.user not in blog.voteUps.all():
+                blog.voteUps.add(request.user)
+            else :
+                blog.voteUps.remove(request.user)
+            return JsonResponse({'success': True, 'votes': blog.vote})
+
+        elif action == 'votedown':            
+            if request.user in blog.voteUps.all():
+                blog.voteUps.remove(request.user)
+                blog.voteDowns.add(request.user)
+            elif request.user not in blog.voteDowns.all():
+                blog.voteDowns.add(request.user)
+            else :
+                blog.voteDowns.remove(request.user)
+            return JsonResponse({'success': True, 'votes': blog.vote})
         return JsonResponse({'success': False, 'error': 'Invalid action.'}, status=400)
 
 class AddBlog(LoginRequiredMixin, View) :
@@ -130,28 +126,27 @@ class AddBlog(LoginRequiredMixin, View) :
             else:
                 return JsonResponse({'success': False, 'error': form.errors}, status=400)
 
-class UpdateBlog(LoginRequiredMixin, View) :
+class UpdateBlog(LoginRequiredMixin, View):
     def get(self, request, blog_id):
         blog = get_object_or_404(Blog, pk=blog_id)
         if blog.author != request.user:
             return JsonResponse({'success': False, 'error': 'You are not authorized to edit this blog.'}, status=403)
-        return render(request, "home/pages/create_blog.html", context={"blog": blog})
-    
-    def post(self,request,blog_id) :
-        try :
-            data = json.loads(request.body)
-            blog = get_object_or_404(Blog, pk=blog_id)
-            if blog.author != request.user:
-                return JsonResponse({'success': False, 'error': 'You are not authorized to edit this blog.'}, status=403)
-            blog.update(
-                title=data.get('title'),
-                content=data.get('content')
-            )
-            return redirect('blog', id=blog.id, name=blog.title.replace(" ", "-").lower())
-        except KeyError as e:
-            return JsonResponse({'success': False, 'error': f'Missing field: {str(e)}'}, status=400)
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        
+        form = BlogForm(instance=blog)
+        return render(request, "home/pages/create_blog.html", context={"form": form, "is_update": True, "blog": blog})
+
+    def post(self, request, blog_id):
+        blog = get_object_or_404(Blog, pk=blog_id)
+        if blog.author != request.user:
+            return JsonResponse({'success': False, 'error': 'You are not authorized to edit this blog.'}, status=403)
+
+        form = BlogForm(request.POST, instance=blog)  # Bind the form to the existing blog instance
+        if form.is_valid():
+            form.save()  # Save the updated blog
+            redirect_url = reverse('blog', args=[blog.id, blog.title])
+            return JsonResponse({'success': True, 'redirect_to': redirect_url})
+        else:
+            return JsonResponse({'success': False, 'error': form.errors}, status=400)
 
 @login_required
 def delete_blog(request, blog_id):
