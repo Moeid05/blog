@@ -1,64 +1,214 @@
-{%extends 'home/layouts/base.html' %}
-{%block content%}
+{% extends 'home/layouts/base.html' %}
+{% block extrastyle %}
+<style>
+    main {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+    }
+
+    #hot-blogs-section, #top-blogs-section, #new-blogs-section {
+        margin-bottom: 40px;
+    }
+
+    #hot-blogs-title, #top-blogs-title, #new-blogs-title {
+        color: #333;
+        font-size: 24px;
+        border-bottom: 2px solid #ccc;
+        padding-bottom: 10px;
+    }
+
+    #hot-blogs-list, #top-blogs-list, #new-blogs-list {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    .blog-item {
+        background: #f9f9f9;
+        margin: 10px 0;
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .blog-title {
+        margin: 0 0 10px;
+        color: #007BFF;
+    }
+
+    .blog-content {
+        color: #555;
+    }
+
+    .load-more-button {
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .load-more-button:hover {
+        background-color: #0056b3;
+    }
+</style>
+{% endblock extrastyle %}
+{% block content %}
 <main>
-    <section>
-        <h2>All Blogs</h2>
-        <div id="blog-list">
-            {% for blog in blogs %}
-                <div class="blog-post">
-                    <h3><a href="{% url 'blog' id=blog.id name=blog.title|slugify %}">{{ blog.title }}</a></h3>
-                    <p>{{ blog.content|truncatewords:30 }}</p>
-                    <p><strong>Published on:</strong> {{ blog.publish_date }}</p>
-                </div>
-            {% empty %}
-                <p>No blogs available at the moment.</p>
-            {% endfor %}
-        </div>
+    <section id="hot-blogs-section">
+        <h2 id="hot-blogs-title">Hot Blogs</h2>
+        <ul id="hot-blogs-list">
+            <li>Loading...</li>
+        </ul>
+        <button id="load-more-hot" class="load-more-button" onclick="loadMoreHotBlogs()">Load More</button>
     </section>
 
-    <section>
-        <h2>Hot Blogs</h2>
-        <div id="hot-blogs">
-            {% for blog in hot_blogs %}
-                <div class="blog-post">
-                    <h3><a href="{% url 'blog' id=blog.id name=blog.title|slugify %}">{{ blog.title }}</a></h3>
-                    <p>{{ blog.content|truncatewords:30 }}</p>
-                    <p><strong>Published on:</strong> {{ blog.publish_date }}</p>
-                </div>
-            {% empty %}
-                <p>No hot blogs available at the moment.</p>
-            {% endfor %}
-        </div>
+    <section id="top-blogs-section">
+        <h2 id="top-blogs-title">Top Blogs</h2>
+        <ul id="top-blogs-list">
+            <li>Loading...</li>
+        </ul>
+        <button id="load-more-top" class="load-more-button" onclick="loadMoreTopBlogs()">Load More</button>
     </section>
 
-    <section>
-        <h2>Top Blogs</h2>
-        <div id="top-blogs">
-            {% for blog in top_blogs %}
-                <div class="blog-post">
-                    <h3><a href="{% url 'blog' id=blog.id name=blog.title|slugify %}">{{ blog.title }}</a></h3>
-                    <p>{{ blog.content|truncatewords:30 }}</p>
-                    <p><strong>Published on:</strong> {{ blog.publish_date }}</p>
-                </div>
-            {% empty %}
-                <p>No top blogs available at the moment.</p>
-            {% endfor %}
-        </div>
-    </section>
-
-    <section>
-        <h2>New Blogs</h2>
-        <div id="new-blogs">
-            {% for blog in new_blogs %}
-                <div class="blog-post">
-                    <h3><a href="{% url 'blog' id=blog.id name=blog.title|slugify %}">{{ blog.title }}</a></h3>
-                    <p>{{ blog.content|truncatewords:30 }}</p>
-                    <p><strong>Published on:</strong> {{ blog.publish_date }}</p>
-                </div>
-            {% empty %}
-                <p>No new blogs available at the moment.</p>
-            {% endfor %}
-        </div>
+    <section id="new-blogs-section">
+        <h2 id="new-blogs-title">New Blogs</h2>
+        <ul id="new-blogs-list">
+            <li>Loading...</li>
+        </ul>
+        <button id="load-more-new" class="load-more-button" onclick="loadMoreNewBlogs()">Load More</button>
     </section>
 </main>
-{%endblock content%}
+{% endblock content %}
+{% block extrajs %}
+<script>
+    let hotBlogs = document.getElementById('hot-blogs-list');
+    let topBlogs = document.getElementById('top-blogs-list');
+    let newBlogs = document.getElementById('new-blogs-list');
+    let hotPage = 1, topPage = 1, newPage = 1;
+
+    // Function to update hot blogs
+    function updateHotBlogs(pageNumber = 1) {
+        fetch('/blog/hot/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ page: pageNumber })
+        })
+        .then(response => response.json())
+        .then(data => {
+            hotBlogs.innerHTML = '';
+            if (data.length === 0) {
+                hotBlogs.innerHTML = '<p>No hot blogs available.</p>';
+            } else {
+                data.forEach(blog => {
+                    hotBlogs.innerHTML += `
+                        <li class="blog-item">
+                            <div class="post-details" onclick="navigateToBlog('${blog.id}', '${blog.title}');">
+                                <h3 class="blog-title">${blog.title}</h3>
+                                <p class="blog-content">${blog.content}</p>
+                            </div>
+                        </li>`;
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching hot blogs:', error);
+            hotBlogs.innerHTML = '<p>Error loading hot blogs.</p>';
+        });
+    }
+
+    // Function to update top blogs
+    function updateTopBlogs(pageNumber = 1) {
+        fetch('/blog/top/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application /json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ page: pageNumber })
+        })
+        .then(response => response.json())
+        .then(data => {
+            topBlogs.innerHTML = '';
+            if (data.length === 0) {
+                topBlogs.innerHTML = '<p>No top blogs available.</p>';
+            } else {
+                data.forEach(blog => {
+                    topBlogs.innerHTML += `
+                        <li class="blog-item">
+                            <div class="post-details" onclick="navigateToBlog('${blog.id}', '${blog.title}');">
+                                <h3 class="blog-title">${blog.title}</h3>
+                                <p class="blog-content">${blog.content}</p>
+                            </div>
+                        </li>`;
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching top blogs:', error);
+            topBlogs.innerHTML = '<p>Error loading top blogs.</p>';
+        });
+    }
+
+    // Function to update new blogs
+    function updateNewBlogs(pageNumber = 1) {
+        fetch('/blog/new/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ page: pageNumber })
+        })
+        .then(response => response.json())
+        .then(data => {
+            newBlogs.innerHTML = '';
+            if (data.length === 0) {
+                newBlogs.innerHTML = '<p>No new blogs available.</p>';
+            } else {
+                data.forEach(blog => {
+                    newBlogs.innerHTML += `
+                        <li class="blog-item">
+                            <div class="post-details" onclick="navigateToBlog('${blog.id}', '${blog.title}');">
+                                <h3 class="blog-title">${blog.title}</h3>
+                                <p class="blog-content">${blog.content}</p>
+                            </div>
+                        </li>`;
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching new blogs:', error);
+            newBlogs.innerHTML = '<p>Error loading new blogs.</p>';
+        });
+    }
+
+    // Function to navigate to a specific blog
+    function navigateToBlog(id, title) {
+        const formattedTitle = title.replace(/\ /g, '-').toLowerCase();
+        window.location.href = `/blog/${id}/${formattedTitle}`;
+    }
+
+    function loadMoreHotBlogs() {
+        hotPage++;
+        updateHotBlogs(hotPage);
+    }
+
+    function loadMoreTopBlogs() {
+        topPage++;
+        updateTopBlogs(topPage);
+    }
+
+    function loadMoreNewBlogs() {
+        newPage++;
+        updateNewBlogs(newPage);
+    }
+
+    updateHotBlogs();
+    updateTopBlogs();
+    updateNewBlogs();
+</script>
+{% endblock extrajs %}

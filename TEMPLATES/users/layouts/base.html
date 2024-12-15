@@ -1,22 +1,49 @@
-{%load static%}
+{% load static %}
 
 <!DOCTYPE html>
 <html>
 <head>
-    <!-- <link rel="stylesheet" href="{%static 'uploader/css/user-panel.css'%}"> -->
     {% include 'home/includes/header.html' %}
     {% block extrahead %}{% endblock extrahead %}
+    <style>
+        #base-header {
+            background-color: #35424a !important; 
+            color: white !important; 
+            padding: 20px !important; 
+            text-align: center !important; 
+        }
+    
+        #base-header nav ul {
+            list-style-type: none !important; 
+            padding: 0 !important; 
+        }
+    
+        #base-header nav ul li {
+            display: inline !important; 
+            margin: 0 15px !important; 
+        }
+    
+        #base-header nav ul li a {
+            color: white !important; 
+            text-decoration: none !important; 
+            font-weight: bold !important; 
+        }
+    
+        #base-header nav ul li a:hover {
+            text-decoration: underline !important; 
+        }
+    </style>
     {% block extrastyle %}{% endblock extrastyle %}
 </head>
 <body>
-    <header>
-        <h1>{{ blog.title }}</h1>
+    <header id="base-header">
+        <h1>{{ post.title }}</h1>
         <nav>
             <ul>
                 <li><a href="{% url 'home' %}">Home</a></li>
                 <li><a href="{% url 'blogs' %}">Blogs</a></li>
                 {% if user.is_authenticated %}
-                    <li><a href="{% url 'profile' %}">profile</a></li>
+                    <li><a href="{% url 'profile' %}">Profile</a></li>
                 {% else %}
                     <li><a href="{% url 'login' %}">Login</a></li>
                     <li><a href="{% url 'register' %}">Register</a></li>

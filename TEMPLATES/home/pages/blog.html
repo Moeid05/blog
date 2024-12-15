@@ -1,21 +1,128 @@
-{%extends 'home/layouts/base.html' %}
-{%block content%}
-<main>
-    <article>
-        <h2>Content</h2>
-        <p>{{ blog.content }}</p>
-        <p><strong>Published on:</strong> {{ blog.publish_date }}</p>
-        <p><strong>Author:</strong> {{ blog.author.username }}</p>
-    </article>
+{% extends 'home/layouts/base.html' %}
+{% block extrahead %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ blog.title }}</title>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{% endblock extrahead %}
+{% block extrastyle %}
+<style>
+    body {
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        background-color: #e9ecef;
+        margin: 0;
+        padding: 20px;
+    }
+    .container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        max-width: 700px;
+        margin: auto;
+        display: flex;
+    }
+    .voting {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-right: 20px; /* Space between voting buttons and content */
+    }
+    .vote-button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 10px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+        margin: 5px 0; /* Space between buttons */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+    }
+    .vote-button:hover {
+        background-color: #0056b3;
+        transform: scale(1.05);
+    }
+    #vote-message {
+        margin-top: 10px;
+        font-size: 0.9em;
+    }
+    h1 {
+        color: #343a40;
+        font-size: 2.5em;
+        margin-bottom: 20px;
+    }
+    .blog-content {
+        margin-bottom: 30px;
+        line-height: 1.8;
+        color: #495057;
+    }
+    p {
+        color: #6c757d;
+        font-size: 1em;
+    }
+    #vote-count {
+        font-weight: bold;
+        color: #007bff;
+    }
+    .arrow-up::before {
+        content: '↑';
+        font-size: 1.5em;
+    }
+    .arrow-down::before {
+        content: '↓';
+        font-size: 1.5em;
+    }
+</style>
+{% endblock extrastyle %}
+{% block content %}
+    <div class="container">
+        <div class="voting">
+            <button id="vote-up" class="vote-button arrow-up" data-action="voteup"></button>
+            <button id="vote-down" class="vote-button arrow-down" data-action="votedown"></button>
+        </div>
+        <div>
+            <h1>{{ blog.title }}</h1>
+            <div class="blog-content">
+                <p>{{ blog.content }}</p>
+            </div>
+            <p id="vote-message"></p>
+            <p>Author: <strong>{{ blog.author }}</strong></p>
+            <p>Total Votes: <span id="vote-count">{{ blog.vote }}</span></p>
+        </div>
+    </div>
+{% endblock content %}
+{% block extrajs %}
+    <script>
+        $(document).ready(function() {
+            $('#vote-up').click(function() {
+                handleVote($(this).data('action'));
+            });
 
-    <section>
-        <h2>Vote on this Blog</h2>
-        <form id="vote-form" method="post" action="{% url 'blog' id=blog.id name=blog.title|slugify %}">
-            {% csrf_token %}
-            <button type="submit" name="action" value="voteup">Upvote</button>
-            <button type="submit" name="action" value="votedown">Downvote</button>
-        </form>
-        <p><strong>Votes:</strong> {{ blog.voteUps.count }} Upvotes, {{ blog.voteDowns.count }} Downvotes</p>
-    </section>
-</main>
-{%endblock content%}
+            $('#vote-down').click(function() {
+                handleVote($(this).data('action'));
+            });
+
+            function handleVote(action) {
+                $.ajax({
+                    type: 'POST',
+                    url: window.location.href, 
+                    data: {
+                        'action': action,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}' 
+                    },
+                    success: function(response) {
+                        $('#vote-count').text(response.votes);
+                        $('#vote-message').text('Vote recorded!').css('color', 'green');
+                    },
+                    error: function(xhr) {
+                        $('#vote-message').text(xhr.responseJSON.error).css('color', 'red');
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock extrajs %}

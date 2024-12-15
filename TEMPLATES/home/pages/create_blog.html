@@ -52,8 +52,15 @@ button[type="submit"]:hover {
     <form id="blog-form" method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Create Blog</button>
+        {% if is_update %}
+            <button type="submit">Update Blog</button>
+        {% else %}
+            <button type="submit">Create Blog</button>
+        {% endif %}
         <div id="error-message"></div>
+        {% if is_update %}
+            <input type="hidden" name="blog_id" value="{{ blog.id }}">
+        {% endif %}
     </form>
 </div>
 {% endblock content %}
